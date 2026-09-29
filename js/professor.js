@@ -3,21 +3,30 @@ import { studentData, getAllUploads } from "./firebase.js";
 let cachedUploads = {};
 
 window.addEventListener('DOMContentLoaded', () => {
-  const pass = prompt("Enter Master Password:");
-  if (pass === "admin123") {
-    // 1. Render student sidebar immediately so names are visible right away
-    renderProfSidebar();
+  // Always render student names immediately so they show up on mobile & desktop
+  renderProfSidebar();
 
-    // 2. Load Firestore uploads in background to update counts
-    loadUploadsInBackground();
-  } else {
-    alert("Incorrect Password!");
-    window.location.href = "index.html";
+  // Handle mobile-friendly login modal
+  const loginModal = document.getElementById('loginModal');
+  const passInput = document.getElementById('profPassInput');
+  const loginBtn = document.getElementById('profLoginBtn');
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      if (passInput.value === "admin123") {
+        if (loginModal) loginModal.style.display = 'none';
+        loadUploadsInBackground();
+      } else {
+        alert("Incorrect Password!");
+      }
+    });
   }
 });
 
 function renderProfSidebar() {
   const sidebar = document.getElementById('profSidebar');
+  if (!sidebar) return;
+
   sidebar.innerHTML = studentData.map(s => {
     const count = (cachedUploads[s.rollNo] || []).length;
     return `
@@ -38,14 +47,13 @@ function renderProfSidebar() {
 async function loadUploadsInBackground() {
   try {
     cachedUploads = await getAllUploads();
-    // Update count labels without redrawing the whole DOM
     studentData.forEach(s => {
       const count = (cachedUploads[s.rollNo] || []).length;
       const item = document.querySelector(`.sidebar-item[data-roll="${s.rollNo}"] .count-label`);
       if (item) item.innerText = `${count} files`;
     });
   } catch (err) {
-    console.warn("Could not fetch Firestore uploads for professor panel:", err);
+    console.warn("Could not fetch Firestore uploads:", err);
   }
 }
 
