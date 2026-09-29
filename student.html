@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPD - Student Vault</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <h1>Semester Project Deck</h1>
+        <span>SPD</span>
+      </div>
+      <div class="nav-buttons">
+        <a href="index.html" class="btn">Back to Roster</a>
+      </div>
+    </div>
+
+    <h2 id="vaultTitle" style="margin-bottom: 5px;"></h2>
+    <p id="vaultRoll" style="color: var(--text-muted); margin-bottom: 20px;"></p>
+
+    <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+      <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">Click or Drag & Drop to Upload File</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">PDF, ZIP, DOCX supported (Multiple uploads allowed)</p>
+      <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+    </div>
+
+    <h3 style="margin-bottom: 15px;">Submission History</h3>
+    <div id="uploadHistory" class="history-list"></div>
+  </div>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/student.js"></script>
+</body>
+</html>

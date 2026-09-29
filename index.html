@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semester Project Deck - Student Roster</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <h1>Semester Project Deck</h1>
+        <span>SPD</span>
+      </div>
+      <div class="nav-buttons">
+        <a href="index.html" class="btn">Student View</a>
+        <a href="professor.html" class="btn btn-primary">Professor Portal</a>
+      </div>
+    </div>
+
+    <input type="text" id="studentSearch" class="search-box" placeholder="Search by name or roll number..." oninput="filterStudents()">
+    <div id="studentGrid" class="grid"></div>
+  </div>
+
+  <script src="js/firebase.js"></script>
+  <script>
+    function renderRoster(list = studentData) {
+      const grid = document.getElementById('studentGrid');
+      const uploads = getStorageData();
+      grid.innerHTML = list.map(s => {
+        const hasFiles = uploads[s.rollNo] && uploads[s.rollNo].length > 0;
+        return `
+          <a class="card" href="student.html?rollNo=${s.rollNo}">
+            <div class="card-info">
+              <div class="name">${s.name}</div>
+              <div class="roll">${s.rollNo}</div>
+            </div>
+            ${hasFiles ? '<span style="color:var(--success); font-size:0.8rem;">Uploaded</span>' : ''}
+          </a>
+        `;
+      }).join('');
+    }
+
+    function filterStudents() {
+      const q = document.getElementById('studentSearch').value.toLowerCase();
+      renderRoster(studentData.filter(s => s.name.toLowerCase().includes(q) || s.rollNo.includes(q)));
+    }
+
+    renderRoster();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPD - Professor Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <h1>Semester Project Deck</h1>
+        <span>SPD</span>
+      </div>
+      <div class="nav-buttons">
+        <a href="index.html" class="btn">Student View</a>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2>Professor Dashboard</h2>
+      <button class="btn btn-primary" onclick="downloadClassZip()">📦 Download All Class Reports (.ZIP)</button>
+    </div>
+
+    <div class="prof-grid">
+      <div id="profSidebar" class="sidebar"></div>
+      <div id="profPreview" class="preview-panel">
+        <p style="color: var(--text-muted);">Select a student from the left panel to inspect files.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/firebase.js"></script>
+  <script src="js/professor.js"></script>
+</body>
+</html>
