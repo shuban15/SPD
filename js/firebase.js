@@ -57,21 +57,27 @@ export async function uploadReport(rollNo, file) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-  formData.append("folder", `spd_reports/${rollNo}`);
 
-  // Upload to Cloudinary API
-  const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
-    method: "POST",
-    body: formData
-  });
+  // Use 'raw' for PDFs, ZIPs, DOCX and 'auto' for others
+  const resourceType = file.type.includes("image") ? "image" : "raw";
+
+  const cloudinaryRes = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+    {
+      method: "POST",
+      body: formData
+    }
+  );
 
   if (!cloudinaryRes.ok) {
-    throw new Error("Failed to upload file to Cloudinary.");
+    const errorData = await cloudinaryRes.json();
+    console.error("Cloudinary Error:", errorData);
+    throw new Error(errorData.error?.message || "Upload failed");
   }
 
   const cloudinaryData = await cloudinaryRes.json();
 
-  // Save Link Metadata to Firestore
+  // Save Metadata to Firestore
   await addDoc(collection(db, "uploads"), {
     rollNo: rollNo,
     fileName: file.name,
