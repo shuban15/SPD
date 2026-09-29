@@ -179,31 +179,49 @@
     <div id="studentGrid" class="grid"></div>
   </div>
 
-  <script src="js/firebase.js"></script>
-  <script>
-    function renderRoster(list = studentData) {
-      const grid = document.getElementById('studentGrid');
-      const uploads = getStorageData();
-      grid.innerHTML = list.map(s => {
-        const hasFiles = uploads[s.rollNo] && uploads[s.rollNo].length > 0;
-        return `
-          <a class="card" href="student.html?rollNo=${s.rollNo}">
-            <div class="card-info">
-              <div class="name">${s.name}</div>
-              <div class="roll">${s.rollNo}</div>
-            </div>
-            ${hasFiles ? '<span style="color:var(--success); font-size:0.8rem; font-weight:600;">Uploaded</span>' : ''}
-          </a>
-        `;
-      }).join('');
-    }
+<script type="module">
+  import { studentData, getAllUploads } from "./js/firebase.js";
 
-    function filterStudents() {
-      const q = document.getElementById('studentSearch').value.toLowerCase();
-      renderRoster(studentData.filter(s => s.name.toLowerCase().includes(q) || s.rollNo.includes(q)));
-    }
+  const grid = document.getElementById('studentGrid');
 
-    renderRoster();
-  </script>
+  // 1. Immediate local render (Guarantees names always show up instantly)
+  function renderInitialRoster(list = studentData) {
+    grid.innerHTML = list.map(s => `
+      <a class="card" href="student.html?rollNo=${s.rollNo}" id="card-${s.rollNo}">
+        <div class="card-info">
+          <div class="name">${s.name}</div>
+          <div class="roll">${s.rollNo}</div>
+        </div>
+        <span class="upload-badge" style="display:none; color:var(--success); font-size:0.8rem; font-weight:600;">Uploaded</span>
+      </a>
+    `).join('');
+  }
+
+  // 2. Fetch Firestore uploads in background to turn on badges
+  async function syncUploadBadges() {
+    try {
+      const uploads = await getAllUploads();
+      studentData.forEach(s => {
+        if (uploads[s.rollNo] && uploads[s.rollNo].length > 0) {
+          const badge = document.querySelector(`#card-${s.rollNo} .upload-badge`);
+          if (badge) badge.style.display = 'inline';
+        }
+      });
+    } catch (err) {
+      console.warn("Could not sync Firestore badges, showing roster anyway:", err);
+    }
+  }
+
+  // Filter search
+  window.filterStudents = function() {
+    const q = document.getElementById('studentSearch').value.toLowerCase();
+    const filtered = studentData.filter(s => s.name.toLowerCase().includes(q) || s.rollNo.includes(q));
+    renderInitialRoster(filtered);
+    syncUploadBadges();
+  };
+
+  renderInitialRoster();
+  syncUploadBadges();
+</script>
 </body>
 </html>
