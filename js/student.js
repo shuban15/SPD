@@ -1,3 +1,5 @@
+import { studentData, uploadReport, getStudentUploads } from "./firebase.js";
+
 const urlParams = new URLSearchParams(window.location.search);
 const rollNo = urlParams.get('rollNo');
 const currentStudent = studentData.find(s => s.rollNo === rollNo);
@@ -11,42 +13,43 @@ if (!currentStudent) {
   renderHistory();
 }
 
-function renderHistory() {
-  const uploads = getStorageData()[currentStudent.rollNo] || [];
+async function renderHistory() {
   const container = document.getElementById('uploadHistory');
   
-  if (uploads.length === 0) {
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">No reports uploaded yet.</div>`;
-    return;
-  }
+  try {
+    const uploads = await getStudentUploads(currentStudent.rollNo);
 
-  container.innerHTML = uploads.map(u => `
-    <div class="history-item">
-      <div>
-        <div style="font-weight: 600;">${u.fileName}</div>
-        <div style="font-size: 0.8rem; color: var(--text-muted);">${u.timestamp}</div>
+    if (uploads.length === 0) {
+      container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">No reports uploaded yet.</div>`;
+      return;
+    }
+
+    container.innerHTML = uploads.map(upload => `
+      <div class="history-item">
+        <div>
+          <div style="font-weight: 600;">${upload.fileName}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${upload.timestamp}</div>
+        </div>
+        <a href="${upload.fileUrl}" target="_blank" rel="noopener">Download</a>
       </div>
-    </div>
-  `).join('');
+    `).join('');
+  } catch (error) {
+    console.error('Could not load upload history:', error);
+    container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">Could not load submission history.</div>`;
+  }
 }
 
-function handleFileUpload(e) {
+window.handleFileUpload = async function(e) {
   const file = e.target.files[0];
   if (!file || !currentStudent) return;
 
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    const uploads = getStorageData();
-    if (!uploads[currentStudent.rollNo]) uploads[currentStudent.rollNo] = [];
-    
-    uploads[currentStudent.rollNo].push({
-      fileName: file.name,
-      timestamp: new Date().toLocaleString(),
-      content: evt.target.result
-    });
-
-    saveStorageData(uploads);
-    renderHistory();
-  };
-  reader.readAsDataURL(file);
-}
+  try {
+    await uploadReport(currentStudent.rollNo, file);
+    await renderHistory();
+  } catch (error) {
+    console.error('Could not upload file:', error);
+    alert(error.message || 'Upload failed. Please try again.');
+  } finally {
+    e.target.value = '';
+  }
+};
