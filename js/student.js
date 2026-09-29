@@ -1,4 +1,4 @@
-import { studentData, uploadReport, getStudentUploads } from "./firebase.js";
+import { studentData, uploadReport, getStudentUploads } from "./firebase.js?v=2";
 
 const urlParams = new URLSearchParams(window.location.search);
 const rollNo = urlParams.get('rollNo');
