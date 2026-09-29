@@ -14,7 +14,7 @@ const firebaseConfig = {
 
 // YOUR CLOUDINARY CONFIG (Replace with your details)
 const CLOUDINARY_CLOUD_NAME = "ezffibpw";
-const CLOUDINARY_UPLOAD_PRESET = "spd_preset";
+const CLOUDINARY_UPLOAD_PRESET = "spd_set";
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
