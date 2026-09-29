@@ -12,8 +12,10 @@ const firebaseConfig = {
   measurementId: "G-CJWE0ZNPJ7"
 };
 
-// YOUR CLOUDINARY CONFIG (Replace with your details)
+// IMPORTANT: Replace this with your EXACT Cloudinary Cloud Name (Found on dashboard)
 const CLOUDINARY_CLOUD_NAME = "ezffibpw";
+
+// IMPORTANT: Replace this with your EXACT Unsigned Upload Preset name (e.g. spd_preset)
 const CLOUDINARY_UPLOAD_PRESET = "spd_set";
 
 const app = initializeApp(firebaseConfig);
@@ -52,17 +54,14 @@ export const studentData = [
   { rollNo: "25248159", name: "SUSHMITHA S" }
 ];
 
-// Helper to Upload File to Cloudinary & Save Metadata to Firestore
 export async function uploadReport(rollNo, file) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-  // Use 'raw' for PDFs, ZIPs, DOCX and 'auto' for others
-  const resourceType = file.type.includes("image") ? "image" : "raw";
-
+  // Send request using auto resource_type endpoint to accept PDFs, ZIPs, and documents
   const cloudinaryRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
     {
       method: "POST",
       body: formData
@@ -71,13 +70,14 @@ export async function uploadReport(rollNo, file) {
 
   if (!cloudinaryRes.ok) {
     const errorData = await cloudinaryRes.json();
-    console.error("Cloudinary Error:", errorData);
+    console.error("Cloudinary Detailed Error:", errorData);
+    alert(`Cloudinary Error: ${errorData.error?.message || "Upload Failed"}`);
     throw new Error(errorData.error?.message || "Upload failed");
   }
 
   const cloudinaryData = await cloudinaryRes.json();
 
-  // Save Metadata to Firestore
+  // Save metadata directly to Cloud Firestore
   await addDoc(collection(db, "uploads"), {
     rollNo: rollNo,
     fileName: file.name,
@@ -86,7 +86,6 @@ export async function uploadReport(rollNo, file) {
   });
 }
 
-// Fetch Student's Upload History from Firestore
 export async function getStudentUploads(rollNo) {
   const q = query(collection(db, "uploads"), where("rollNo", "==", rollNo));
   const querySnapshot = await getDocs(q);
@@ -95,7 +94,6 @@ export async function getStudentUploads(rollNo) {
   return files;
 }
 
-// Fetch All Uploads for Professor Dashboard
 export async function getAllUploads() {
   const querySnapshot = await getDocs(collection(db, "uploads"));
   const uploads = {};
