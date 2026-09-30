@@ -94,17 +94,44 @@ function selectProfStudent(rollNo, el) {
   }
 }
 
+// Single Student ZIP / Direct Download
 async function downloadStudentZip(rollNo) {
   const student = studentData.find(s => s.rollNo === rollNo);
   const uploads = cachedUploads[rollNo] || [];
   if (uploads.length === 0) return alert("No files to zip!");
 
   const zip = new JSZip();
+  let added = 0;
+
   for (const u of uploads) {
-    const res = await fetch(u.fileUrl);
-    const blob = await res.blob();
-    zip.file(u.fileName, blob);
+    try {
+      // Use CORS proxy if direct fetch is blocked by origin policies
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(u.fileUrl)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error("Fetch failed");
+      const blob = await res.blob();
+      zip.file(u.fileName, blob);
+      added++;
+    } catch (e) {
+      console.warn(`Falling back to direct link for ${u.fileName}`);
+      // Direct browser fallback download
+      const a = document.createElement('a');
+      a.href = u.fileUrl;
+      a.download = u.fileName;
+      a.target = '_blank';
+      a.click();
+    }
   }
+
+  if (added > 0) {
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${student.name.replace(/\s+/g, '_')}_${rollNo}.zip`;
+    link.click();
+  }
+}
+
 
   const zipBlob = await zip.generateAsync({type:"blob"});
   const link = document.createElement('a');
